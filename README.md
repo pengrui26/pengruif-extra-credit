@@ -2,142 +2,123 @@
 
 ## Project Overview
 
-This project implements a machine learning solution to detect fraudulent credit card transactions. Using a combination of transaction details, customer information, and merchant data, the model identifies potential fraud cases with high accuracy.
+This project implements a machine learning solution for credit card fraud detection using a Random Forest model with SMOTE for handling class imbalance. The model achieved an impressive F1 score of 0.974, demonstrating high accuracy in identifying fraudulent transactions.
 
 ## Model Performance
 
-- **Best F1 Score**: ~0.96 (5-fold cross-validation)
-- **Model Type**: Random Forest with SMOTE
-- **Data Balance**: Original data contains ~11.4% fraudulent transactions
+- **Average F1 Score**: 0.9740 (±0.0017)
+- **Cross-validation F1 Scores**:
+  - Fold 1: 0.97342
+  - Fold 2: 0.97328
+  - Fold 3: 0.97322
+  - Fold 4: 0.97438
+  - Fold 5: 0.97546
+- **Prediction Distribution**:
+  - Normal Transactions: 88.70%
+  - Fraudulent Transactions: 11.30%
 
-## Features
+## Feature Importance
 
-The model uses six core features:
+1. Transaction Amount (0.529642)
 
-1. `amt`: Transaction amount
-2. `trans_hour`: Hour of transaction
-3. `trans_day`: Day of transaction
-4. `age`: Customer age
-5. `category_code`: Encoded transaction category
-6. `gender`: Customer gender (encoded)
+   - Most significant feature
+   - Contributes over 52% to the model's decisions
+
+2. Time-related Features
+
+   - Transaction Hour (0.180485)
+   - Transaction Day (0.156113)
+   - Combined contribution of ~33.7%
+
+3. Category Code (0.084461)
+
+   - Fourth most important feature
+   - Represents transaction category
+
+4. Customer Information
+   - Age (0.039042)
+   - Gender (0.010257)
 
 ## Technical Implementation
 
-### Data Preprocessing
-
-1. **Time Processing**:
-
-   - Converted transaction dates to datetime
-   - Extracted hour and day information
-
-2. **Age Calculation**:
-
-   - Calculated precise age at transaction time
-   - Considered month and day for accurate age computation
-
-3. **Feature Encoding**:
-   - Label encoded categorical variables
-   - Binary encoded gender (M/F)
-
 ### Model Architecture
 
-1. **Data Pipeline**:
+```python
+Pipeline([
+    ('smote', SMOTE(random_state=42, sampling_strategy=0.3)),
+    ('classifier', RandomForestClassifier(
+        n_estimators=220,
+        random_state=42,
+        class_weight=None,
+        n_jobs=-1
+    ))
+])
+```
 
-   ```python
-   Pipeline([
-       ('smote', SMOTE(random_state=42, sampling_strategy=0.3)),
-       ('classifier', RandomForestClassifier(
-           n_estimators=220,
-           random_state=42,
-           class_weight=None,
-           n_jobs=-1
-       ))
-   ])
-   ```
+### Key Components
 
-2. **Key Components**:
-   - SMOTE resampling with 0.3 sampling strategy
-   - Random Forest with 220 trees
+1. **Data Preprocessing**:
+
    - StandardScaler for feature normalization
+   - Label encoding for categorical variables
+   - Date/time processing for temporal features
 
-### Validation Strategy
+2. **Class Imbalance Handling**:
 
-- 5-fold cross-validation
-- Stratified sampling to maintain class distribution
-- F1 score as primary metric
+   - SMOTE with 0.3 sampling strategy
+   - Preserves data distribution while addressing imbalance
+
+3. **Validation Strategy**:
+   - 5-fold cross-validation
+   - Stratified sampling
+   - F1 score as primary metric
+
+## Features
+
+Six core features were used:
+
+- `amt`: Transaction amount
+- `trans_hour`: Hour of transaction
+- `trans_day`: Day of transaction
+- `category_code`: Encoded transaction category
+- `age`: Customer age
+- `gender`: Customer gender (encoded)
 
 ## Model Development Process
 
-### Initial Approach
+### Feature Engineering
 
-- Started with basic Random Forest
-- Used standard feature engineering
-- Identified class imbalance issue
+1. **Temporal Features**:
 
-### Improvements
+   - Extracted hour and day from transaction datetime
+   - Preserved temporal patterns in transactions
 
-1. **Data Balancing**:
+2. **Categorical Encoding**:
 
-   - Implemented SMOTE for minority class oversampling
-   - Tested different sampling ratios
-   - Selected 0.3 as optimal sampling strategy
+   - Label encoded transaction categories
+   - Binary encoded gender
 
-2. **Model Tuning**:
+3. **Age Calculation**:
+   - Precise age calculation using transaction date
+   - Considered month and day for accuracy
 
-   - Optimized number of trees (n_estimators=220)
-   - Removed class weights due to SMOTE
-   - Utilized all CPU cores for faster training
+### Model Configuration
 
-3. **Feature Selection**:
-   - Started with comprehensive feature set
-   - Identified most important features through feature importance analysis
-   - Reduced to six core features for optimal performance
+- Random Forest with 220 trees
+- SMOTE for balanced training
+- Parallel processing enabled
+- Cross-validation for robust evaluation
 
-## Predictions Distribution
+## Results Analysis
 
-The model maintains a realistic prediction distribution:
+### Model Stability
 
-- Legitimate transactions: ~87%
-- Fraudulent transactions: ~13%
+- Very stable performance across folds
+- Low standard deviation (±0.0017)
+- Consistent F1 scores around 0.974
 
-## Key Learnings
+### Prediction Distribution
 
-1. Feature importance analysis showed transaction amount and time as critical factors
-2. SMOTE proved more effective than class weights for handling imbalance
-3. Cross-validation ensures robust performance estimation
-
-## Future Improvements
-
-1. Consider adding feature interactions
-2. Experiment with different sampling techniques
-3. Test alternative models (XGBoost, LightGBM)
-4. Implement feature selection based on domain knowledge
-
-## Technical Requirements
-
-- Python 3.x
-- Required packages:
-  ```
-  pandas
-  numpy
-  scikit-learn
-  imbalanced-learn
-  ```
-
-## Usage
-
-1. Prepare data in CSV format
-2. Run feature engineering
-3. Execute model training
-4. Generate predictions for new transactions
-
-## File Structure
-
-```
-fraud_detection/
-│
-├── train.csv           # Training data
-├── test.csv            # Test data
-├── main.py            # Main script
-└── submission.csv     # Predictions output
-```
+- Realistic distribution in test set
+- Maintains expected fraud ratio
+- Aligns with real-world fraud patterns
